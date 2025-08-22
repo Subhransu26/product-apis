@@ -1,88 +1,127 @@
-/* 
-Step 2: Add Release Date Filters
-For the second step, please create an API endpoint called /step2 that extends the functionality from Step 1 by adding date filtering capabilities. This endpoint should accept optional query parameters release_date_start and release_date_end. Note that the date filters are inclusive of both dates.
-
-API Usage Examples:
-
-/step2?release_date_start=2025-01-31&release_date_end=2025-03-18: Returns all products whose release date is between 31 January and 18 March, 2025 (inclusive of both dates)
-/step2?release_date_start=2024-12-19: Returns all products whose release date is on or after 19th December, 2024
-/step2?release_date_end=2025-02-10: Returns all products released on or before 10th February 2025
-/step2: Returns all products exactly the same way as the /step1 API from the previous step
-Requirements:
-
-Use the same JSON response structure as Step 1
-Handle query parameter errors (such as incorrect date formats, etc.) with a 400 status code and descriptive error message
-Both query parameters are optional and can be used independently
-If there are no items found in the response for a given date filter range, return an empty array to the caller
-
-{
-    "productId": "SKU-LPTP-001",
-    "productName": "Innovatech ProBook X1",
-    "brandName": "Innovatech",
-    "category": "Laptops",
-    "description": "A high-performance laptop for professionals, featuring a powerful processor and a sleek, durable design for productivity on the go.",
-    "price": 1299.99,
-    "currency": "USD",
-    "discountPercentage": 5,
-    "stockQuantity": 85,
-    "warehouseLocation": "Warehouse C, Sector 2",
-    "sku": "INVT-PBX1-2025-512",
-    "processor": "Innovatech Fusion Z1",
-    "memory": "16GB DDR5",
-    "storageCapacity": "512GB SSD",
-    "displaySize": "14 inches",
-    "isAvailable": true,
-    "releaseDate": "2025-01-20",
-    "lastUpdated": "2024-08-01T10:00:00Z",
-    "averageRating": 4.7,
-    "ratingCount": 312,
-    "warrantyDurationMonths": 24,
-    "weight_kg": 1.4
-  },
-*/
-
 import axios from "axios";
-import { useEffect } from "react";
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export default function Step2() {
   const [api, setApi] = useState([]);
-  const [releaseDateStart, setReleaseDateStart] = useState("");
-  const [releaseDateEnd, setReleaseDateEnd] = useState("");
+  const [apifilter, setApiFilter] = useState([]);
+  const [error, setError] = useState(null);
 
-  const { releaseDate, lastUpdated } = useParams();
+  const [searchParams] = useSearchParams();
+
+  const releaseDateStart = searchParams.get("release_date_start");
+  const releaseDateEnd = searchParams.get("release_date_end");
 
   const fetchApi = async () => {
-    const response = await axios.get(
-      "http://interview.surya-digital.in/get-electronics"
+    try {
+      setError(null);
+      const response = await axios.get(
+        "http://interview.surya-digital.in/get-electronics"
+      );
+      setApi(response.data);
+    } catch (err) {
+      setError("Failed to fetch data");
+      console.error("API Error:", err);
+    }
+  };
+
+  const isValidDate = (dateString) => {
+    if (!dateString) return true;
+    const regex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!regex.test(dateString)) return false;
+    const date = new Date(dateString);
+    return (
+      date instanceof Date &&
+      !isNaN(date) &&
+      date.toISOString().slice(0, 10) === dateString
     );
-    setApi(response.data);
+  };
+
+  const filterByDateRange = (products) => {
+    if (!isValidDate(releaseDateStart) || !isValidDate(releaseDateEnd)) {
+      setError("Invalid date format. Please use YYYY-MM-DD format.");
+      return [];
+    }
+
+    // incase nofilter, return all product
+    if (!releaseDateStart && !releaseDateEnd) {
+      return products;
+    }
+
+    return products.filter((product) => {
+      const productDate = new Date(product.releaseDate);
+
+      const startDate = releaseDateStart ? new Date(releaseDateStart) : null;
+      const endDate = releaseDateEnd ? new Date(releaseDateEnd) : null;
+
+      //   start date
+      if (startDate && productDate < startDate) {
+        return false;
+      }
+
+      //    end date
+      if (endDate && productDate > endDate) {
+        return false;
+      }
+
+      return true;
+    });
   };
 
   useEffect(() => {
     fetchApi();
   }, []);
 
+  useEffect(() => {
+    if (api.length > 0) {
+      const filtered = filterByDateRange(api);
+      setApiFilter(filtered);
+    }
+  }, [api, releaseDateStart, releaseDateEnd]);
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <div className="text-4xl text-red-400 py-2">
+          <strong>Error:</strong> {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">API Data</h1>
-      <ul className="space-y-2">
-        {api.map((item) => (
-          <li key={item.id}>
-            <h2 className="text-xl font-semibold">{item.productName}</h2>
-            <p>Brand: {item.brandName}</p>
-            <p>Category: {item.categoryName}</p>
-            <p>Description: {item.descriptionText}</p>
-            <p>Price: {item.price} {item.currency}</p>
-            <p>Processor: {item.processor}</p>
-            <p>Memory: {item.memory}</p>
-            <p>Release Date: {item.releaseDate}</p>
-            <p>Average Rating: {item.averageRating}</p>
-            <p>Rating Count: {item.ratingCount}</p>
-          </li>
-        ))}
-      </ul>
+      <h1 className="text-2xl font-bold mb-4">
+        Step 2: Add Release Date Filters
+      </h1>
+
+      {apifilter.length === 0 ? (
+        <div className="text-gray-500 text-center py-8">
+          No products found for the specified date range.
+        </div>
+      ) : (
+        <ul className="space-y-4">
+          {apifilter.map((item, index) => (
+            <li key={item.productId || index}>
+              <h2 className="text-xl font-bold text-blue-600">
+                {item.productName}
+              </h2>
+              <div className="text-lg">
+                <p>product_id: {item.productId}</p>
+                <p>Brand: {item.brandName}</p>
+                <p>Category: {item.category}</p>
+                <p>Description: {item.description}</p>
+                <p>Price: {item.price} {item.currency}</p>
+                <p>Processor: {item.processor}</p>
+                <p>Memory: {item.memory}</p>
+                <p>Release Date: {item.releaseDate}</p>
+                <p>Average Rating: {item.averageRating}</p>
+                <p>Rating Count: {item.ratingCount}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

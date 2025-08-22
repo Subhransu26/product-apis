@@ -36,11 +36,11 @@ export default function Step1() {
       <ul className="space-y-2">
         {api.map((item) => (
           <>
-            <p>product_id: {item.product_id}</p>
+            <p>product_id: {item.productId}</p>
             <p>product_name: {item.product_name}</p>
             <p>Brand: {item.brandName}</p>
-            <p>Category: {item.categoryName}</p>
-            <p>Description: {item.descriptionText}</p>
+            <p>Category: {item.category}</p>
+            <p>Description: {item.description}</p>
             <p>Price: {item.price} {item.currency}</p>
             <p>Processor: {item.processor}</p>
             <p>Memory: {item.memory}</p>
