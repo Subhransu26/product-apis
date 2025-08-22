@@ -117,7 +117,7 @@ export const step4 = async (req, res) => {
     if (paginated.length === 0) {
       return res
         .status(404)
-        .json({ message: "No data found for the given page" });
+        .json({ message: "No data found." });
     }
 
     return res.status(200).json(paginated);
@@ -127,38 +127,57 @@ export const step4 = async (req, res) => {
   }
 };
 
+
 export const step5 = async (req, res) => {
   try {
-    const { data: data1 } = await axios.get(`${BASE_URL}`);
-    const { data: data2 } = await axios.get(
-      `http://interview.surya-digital.in/get-electronics-brands`
-    );
+    const resp1 = await axios.get(BASE_URL);
+    const resp2 = await axios.get("http://interview.surya-digital.in/get-electronics-brands");
 
-    const products = data1.map((item) => ({
-      product_id: item.productId,
-      product_name: item.productName,
-      brand_name: item.brandName,
-      category_name: item.category,
-      description_text: item.description,
-      price: item.price,
-      currency: item.currency,
-      processor: item.processor,
-      memory: item.memory,
-      release_date: item.releaseDate,
-      average_rating: item.averageRating,
-      rating_count: item.ratingCount,
-    }));
+    const products = resp1.data || [];
+    const brands = resp2.data || [];
 
-    const brands = data2.map((item) => ({
-      name: item.name,
-      year_founded: item.yearFounded,
-      company_age: item.companyAge,
-      address: item.address,
-    }));
+    
+    const brandLookup = {};
+    for (let b of brands) {
+      const addr = b.address;
+      const fullAddress = [
+        addr.street,
+        addr.city,
+        addr.state,
+        addr.postalCode,
+        addr.country,
+      ].filter(Boolean).join(", ");
 
-    return res.status(200).json({ products, brands });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal Server Error" });
+      brandLookup[b.name] = {
+        name: b.name,
+        year_founded: b.yearFounded,
+        company_age: new Date().getFullYear() - (b.yearFounded || 0),
+        address: fullAddress
+      };
+    }
+
+    const result = products.map(p => {
+      let brandInfo = brandLookup[p.brandName] || null;
+      return {
+        product_id: p.productId,
+        product_name: p.productName,
+        brand: brandInfo,
+        category_name: p.category,
+        description_text: p.description,
+        price: p.price,
+        currency: p.currency,
+        processor: p.processor,
+        memory: p.memory,
+        release_date: p.releaseDate,
+        average_rating: p.averageRating,
+        rating_count: p.ratingCount
+      };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error("step5 error:", err.message);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
