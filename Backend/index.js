@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-// import router from "./routes/step1.js";
+import apiroutes from "./routes/apiroutes.js";
 
 dotenv.config();
 
@@ -12,9 +12,9 @@ app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
-// app.use("/api", step1)
 
 
+app.use("/", apiroutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
