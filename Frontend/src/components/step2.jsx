@@ -5,22 +5,19 @@ import { useSearchParams } from "react-router-dom";
 export default function Step2() {
   const [api, setApi] = useState([]);
   const [apifilter, setApiFilter] = useState([]);
-  const [error, setError] = useState(null);
 
   const [searchParams] = useSearchParams();
 
   const releaseDateStart = searchParams.get("release_date_start");
-  const releaseDateEnd = searchParams.get("release_date_end");
+  const releaseDateEnd = searchParams.get("lastUpdated");
 
   const fetchApi = async () => {
     try {
-      setError(null);
       const response = await axios.get(
         "http://interview.surya-digital.in/get-electronics"
       );
       setApi(response.data);
     } catch (err) {
-      setError("Failed to fetch data");
       console.error("API Error:", err);
     }
   };
@@ -39,7 +36,6 @@ export default function Step2() {
 
   const filterByDateRange = (products) => {
     if (!isValidDate(releaseDateStart) || !isValidDate(releaseDateEnd)) {
-      setError("Invalid date format. Please use YYYY-MM-DD format.");
       return [];
     }
 
@@ -79,16 +75,6 @@ export default function Step2() {
     }
   }, [api, releaseDateStart, releaseDateEnd]);
 
-  if (error) {
-    return (
-      <div className="p-4">
-        <div className="text-4xl text-red-400 py-2">
-          <strong>Error:</strong> {error}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">
@@ -96,27 +82,24 @@ export default function Step2() {
       </h1>
 
       {apifilter.length === 0 ? (
-        <div className="text-gray-500 text-center py-8">
-          No products found for the specified date range.
-        </div>
+        <div className="text-gray-500 text-center py-8">No products found.</div>
       ) : (
         <ul className="space-y-4">
-          {apifilter.map((item, index) => (
-            <li key={item.productId || index}>
-              <h2 className="text-xl font-bold text-blue-600">
-                {item.productName}
-              </h2>
+          {apifilter.map((item) => (
+            <li key={item.productId}>
               <div className="text-lg">
                 <p>product_id: {item.productId}</p>
-                <p>Brand: {item.brandName}</p>
-                <p>Category: {item.category}</p>
-                <p>Description: {item.description}</p>
-                <p>Price: {item.price} {item.currency}</p>
-                <p>Processor: {item.processor}</p>
-                <p>Memory: {item.memory}</p>
-                <p>Release Date: {item.releaseDate}</p>
-                <p>Average Rating: {item.averageRating}</p>
-                <p>Rating Count: {item.ratingCount}</p>
+                <p>product_name: {item.productName}</p>
+                <p>brand_name: {item.brandName}</p>
+                <p>category_name: {item.category}</p>
+                <p>description_text: {item.description}</p>
+                <p>price: {item.price} </p>
+                <p>currency: {item.currency}</p>
+                <p>processor: {item.processor}</p>
+                <p>memory: {item.memory}</p>
+                <p>release_date: {item.releaseDate}</p>
+                <p>average_rating: {item.averageRating}</p>
+                <p>rating_count: {item.ratingCount}</p>
               </div>
             </li>
           ))}

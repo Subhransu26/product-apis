@@ -35,19 +35,20 @@ export default function Step1() {
       <h1 className="text-2xl font-bold mb-4">API Data</h1>
       <ul className="space-y-2">
         {api.map((item) => (
-          <>
+          <div className="text-lg">
             <p>product_id: {item.productId}</p>
-            <p>product_name: {item.product_name}</p>
-            <p>Brand: {item.brandName}</p>
-            <p>Category: {item.category}</p>
-            <p>Description: {item.description}</p>
-            <p>Price: {item.price} {item.currency}</p>
-            <p>Processor: {item.processor}</p>
-            <p>Memory: {item.memory}</p>
-            <p>Release Date: {item.releaseDate}</p>
-            <p>Average Rating: {item.averageRating}</p>
-            <p>Rating Count: {item.ratingCount}</p>
-          </>
+            <p>product_name: {item.productName}</p>
+            <p>brand_name: {item.brandName}</p>
+            <p>category_name: {item.category}</p>
+            <p>description_text: {item.description}</p>
+            <p>price: {item.price} </p>
+            <p>currency: {item.currency}</p>
+            <p>processor: {item.processor}</p>
+            <p>memory: {item.memory}</p>
+            <p>release_date: {item.releaseDate}</p>
+            <p>average_rating: {item.averageRating}</p>
+            <p>rating_count: {item.ratingCount}</p>
+          </div>
         ))}
       </ul>
     </div>
